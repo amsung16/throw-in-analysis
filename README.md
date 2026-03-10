@@ -17,8 +17,11 @@ Total: ~263 matches, ~900k+ events
 
 ## Project Structure
 data/       → raw and processed StatsBomb event data
+
 notebooks/  → EDA and analysis
+
 src/        → reusable Python modules
+
 outputs/    → figures and result tables
 
 ## Setup
@@ -28,3 +31,4 @@ pip install statsbombpy mplsoccer pandas numpy
 - Independent: throw-in displacement distance (metres)
 - Dependent: xT gain per throw-in chain
 - Moderators: pitch zone, tournament stage, confederation
+

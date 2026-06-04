@@ -1,0 +1,98 @@
+# Pre-Research: Throw-in Positional Displacement & xT Analysis
+
+## 1. Background & Motivation
+
+Throw-in is a method of restarting play in association football when the whole ball passes over the touchline. It is the only play that field players are allowed to use their hands in the play. Although it may sound important, many teams tend to focus on other plays rather than throw-in plays. Starting 2018, Liverpool FC hired a throw-in coach, which significantly increased their throw-in success rate, 2nd most in Europe, followed by FC Midtjylland (Denmark), from the second bottom of EPL in the previous season. As it has seen, some teams try to examine the importance of throw-ins, yet the positioning displacement remain uncovered.
+
+This project explores whether teams that exploit referee leniency on throw-in positioning gain a measurable attacking advantage, quantified through Expected Threat (xT).
+
+---
+
+## 2. Literature Review
+
+- **Singh, K. (2018)** — Original xT framework, pitch zone probability model
+- **StatsBomb (2019)** — Set piece analysis methodology
+
+---
+
+## 3. Key Definitions
+
+**Positional Displacement**
+The Euclidean distance (in metres) between the coordinates where the ball exited play (ball exit location) and the coordinates where the throw-in 
+was actually taken (throw location).
+
+**Ball Exit Location**
+The `end_location` of the final event (pass or carry) tagged with `out=True` in the StatsBomb event stream, immediately preceding a throw-in event.
+
+**Throw Location**
+The `location` field of the StatsBomb event where `pass_type_name == "Throw-in"`.
+
+**Throw-in Chain**
+All events belonging to the same `possession` sequence initiated by a throw-in, ending when possession is lost, the ball goes out of play, or a goal is scored.
+
+**Expected Threat (xT)**
+A pitch zone-based model that assigns each location a probability of resulting in a goal within the next few actions (Singh, 2018). Measured on a 120×80 grid.
+
+**xT Gain**
+The difference between the peak xT value reached during a throw-in chain and the xT value at the throw location itself.
+
+---
+
+## 4. Research Questions
+
+**Primary**
+Does throw-in positional displacement significantly increase a team's expected threat (xT) in major international tournaments?
+
+**Secondary**
+- How much positional displacement occurs on average per throw-in, and does it vary by pitch zone, team, or tournament stage?
+- Do throw-in chains with higher displacement generate greater xT gain?
+- Is the relationship stronger in the attacking third vs defensive/middle thirds?
+- Does displacement-to-xT conversion differ between group stage and knockout matches?
+
+---
+
+## 5. Hypotheses
+
+**H1 (Main)**
+Teams that gain forward displacement on throw-ins in the attacking and middle thirds will show a statistically significant increase in xT gain per throw-in chain compared to teams whose throw-ins are taken closer to the ball exit location.
+
+**H2 (Zone)**
+The relationship between displacement and xT gain will be strongest in the attacking third, where territorial gain has the highest probability of generating a scoring opportunity.
+
+**H3 (Stage)**
+Displacement-to-xT conversion rates will differ between group stage and knockout matches, reflecting increased defensive organization in elimination games.
+
+**Null Hypothesis**
+Positional displacement has no statistically significant effect on xT gain per throw-in chain.
+
+---
+
+## 6. Dataset
+
+| Tournament               | Year | Matches | 360 Data |
+|--------------------------|------|---------|----------|
+| FIFA World Cup           | 2022 | 64      | ✅        |
+| UEFA Euro                | 2024 | 51      | ✅        |
+| Copa América             | 2024 | 32      | ✅        |
+| Africa Cup of Nations    | 2023 | 52      | ❌        |
+| FIFA Women's World Cup   | 2023 | 64      | ✅        |
+
+**Source:** StatsBomb Open Data (free)  
+**Total:** ~263 matches, ~900k+ events
+
+---
+
+## 7. Assumptions & Limitations
+
+- StatsBomb coordinates are precise to ~0.1 pitch units (~8cm) — sufficient for displacement measurement but not perfect
+- The data cannot distinguish whether displacement was intentional (tactical) or unchallenged by the referee
+- Tournament samples are smaller than league datasets, limiting generalizability
+- xT is a static grid model and does not account for player positioning at the moment of the throw
+
+---
+
+## 8. Notes & Open Questions
+
+- [ ] Decide minimum displacement threshold to filter noise (e.g. >0.5m?)
+- [ ] Decide how to handle throw-ins in the final seconds of each half
+- [ ] Investigate whether 360 data can enrich the analysis with defensive shape at throw-in moment

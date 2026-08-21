@@ -4,7 +4,7 @@ import pandas as pd
 METRES_PER_X = 105 / 120  # StatsBomb: 120 units = 105 m
 METRES_PER_Y = 68 / 80    # StatsBomb: 80 units = 68 m
 TOUCHLINE_THRESH = 10      # units; beyond this, player location ≠ ball exit
-
+EXIT_X_PROXIMITY_THRESH = 20  # units; throw-in must be within this of exit to count
 
 def _best_exit_location(exit_row: pd.Series) -> list | None:
     """
@@ -12,13 +12,18 @@ def _best_exit_location(exit_row: pd.Series) -> list | None:
     Priority: pass_end_location > carry_end_location > player location.
     Player location only accepted when within TOUCHLINE_THRESH of the touchline.
     """
-    if isinstance(exit_row.get("pass_end_location"), list):
-        return exit_row["pass_end_location"]
+    candidate = []
+    pass_end = exit_row.get("pass_end_location")
+    if isinstance(pass_end, list):
+        candidate.append(pass_end)
     if isinstance(exit_row.get("carry_end_location"), list):
-        return exit_row["carry_end_location"]
-    loc = exit_row.get("location")
-    if isinstance(loc, list) and min(loc[1], 80 - loc[1]) < TOUCHLINE_THRESH:
-        return [loc[0], 0.0 if loc[1] < 40 else 80.0]
+        candidate.append(exit_row["carry_end_location"])
+    if isinstance(exit_row.get("location"), list):
+        candidate.append(exit_row["location"])
+
+    for loc in candidate:
+        if isinstance(loc, list) and min(loc[1], 80 - loc[1]) < TOUCHLINE_THRESH:
+            return loc
     return None
 
 
@@ -39,18 +44,20 @@ def _get_exit_location(events: pd.DataFrame, throw_idx: int) -> list | None:
     throwing team's coordinate frame.
     """
     ti = events.iloc[throw_idx]
-    out_events = events[
-        (events["possession"] == ti["possession"] - 1) & (events["out"] == True)
+    candidates = events[
+        (events["possession"] == ti["possession"] - 1)
     ]
-    if out_events.empty:
-        return None
-    exit_row = out_events.iloc[-1]
-    exit_loc = _best_exit_location(exit_row)
-    if exit_loc is None:
-        return None
-    same_team = exit_row["team"] == ti["team"]
-    return _to_throw_frame(exit_loc, same_team)
-
+    for _, row in candidates[::-1].iterrows():
+        loc = _best_exit_location(row)
+        if loc is    None:
+            continue
+        same_team = row["team"] == ti["team"]
+        loc_throw_frame = _to_throw_frame(loc, same_team)
+        same_side = (loc_throw_frame[1] < 40) == (ti["location"][1] < 40)
+        x_close = abs(loc_throw_frame[0] - ti["location"][0]) < EXIT_X_PROXIMITY_THRESH
+        if same_side and x_close:
+            return loc_throw_frame
+    return None
 
 def compute_displacement(throw_loc: list, exit_loc: list) -> dict:
     """

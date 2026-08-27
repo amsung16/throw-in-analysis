@@ -27,7 +27,7 @@ def build_features(events:pd.DataFrame, match_id:int, tournament_label:str) -> p
     disp["throwin_y"] = disp["throw_location"].map(lambda l: l[1] if isinstance(l, list) else None)
 
     return disp[[
-        "tournament","match_id","team","minute",
+        "tournament","match_id","team","minute","possession",
         "throwin_x", "throwin_y",
         "creep_m", "creep_x_m", "creep_y_m",
         "chain_xg", "max_chain_x"
